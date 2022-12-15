@@ -322,7 +322,7 @@ input[type="radio"]:last-child{
         </span>
     </div>
     <?php if( !empty($_POST['btn_submit']) && empty($_POST['opinion']) ): ?>
-        <div class="error__message"> <?php echo $error_message5; ?> </div>
+        <p class="error__message"> <?php echo $error_message5; ?> </p>
     <?php endif; ?>
     <input type="submit" name="btn_submit" value="確認">
 </form>

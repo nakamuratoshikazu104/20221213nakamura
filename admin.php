@@ -15,19 +15,81 @@ try{
 }
 
 if( !empty($_POST['btn_submit']) ){
-// 検索条件でデータ取得
-    // SQL作成　  SELECT WHERE
-    // 値をセット $stmt -> bindParam
-    // SQLクエリの実行 $stmt -> execute();
-    // データ取得　$data_array = $stmt-> fetch();
 
+// 変数の初期化
+$add="";
+$conditions=array();
+$sql="";
+$message_array=array();
+$stmt="";
+
+//　検索条件の入力チェック -> 入力されていない時は、WHERE節に含めないようにする
+if( !empty($_POST['fullname']) ) {
+    $conditions[]="fullname like '%".$_POST['fullname']."%'";
+} 
+
+if( $_POST['gender'] !== "0" ) {
+    $conditions[]="gender =".$_POST['gender'];
 }
+
+if( !empty($_POST['created_from']) ) {
+    $conditioins[]="created_at>=".$_POST['created_from'];
+}
+
+if( !empty($_POST['created_until']) ) {
+    $conditions[]="created_at<=".$_POST['created_until'];
+}
+
+if( !empty($_POST['email']) ) {
+    $conditions[]="email='%".$_POST['email']."%'";
+}
+
+if( empty($conditions) ){
+    // 検索条件が一つも入力されていない時は、全データ出力
+    // SQL作成
+    $sql="SELECT * FROM contacts ORDER BY id ASC";
+    // SQLクエリの実行
+    $message_array=$pdo -> query($sql);
+
+} else {
+
+$add=implode(' AND ', $conditions);
+
+// 検索条件でデータ取得
+    // SQL作成
+    $sql = "SELECT * FROM contacts WHERE ".$add ;
+
+    // SQL実行後、取得データを配列に格納
+    $message_array = $pdo -> query($sql);
+}
+}
+
+// トランザクション開始
+$pdo -> beginTransaction();
 
 if( !empty($_POST['btn_delete']) ){
 // $value['id']を持つデータをDBから削除
-    // SQL作成　DELETE WHERE id = $value['id']
-    // SQLクエリの実行 $stmt -> execute();
+try{
+// SQL作成
+$stmt = $pdo -> prepare( "DELETE FROM contacts WHERE id={$_POST['opinion_id']}" );
+
+// SQLクエリの実行
+$stmt -> execute();
+
+// コミット
+$res = $pdo -> commit();
+} catch(Exception $e) {
+    $pdo -> rollback;
 }
+
+if ( $res ){
+    header("Location: index.php");
+}
+// プリペアドステートメントを削除
+$stmt = null;
+
+}
+$pdo="";
 ?>
 
 
@@ -115,14 +177,17 @@ a{
 .delete__main-gender{
     width: 72px;
     text-align: center;
+    font-size: 12px;
 }
 .delete__main-email{
     width: 180px;
     text-align: center;
+    font-size: 12px;
 }
 .delete__main-opinion{
     width: 400px;
     text-align: left;
+    font-size: 12px;
 }
 .delete__main-delete{
     width: 64px;
@@ -194,29 +259,23 @@ table tr:first-child{
                 <th class="delete__main-opinion">ご意見</th>
                 <th class="delete__main-delete"></th>
             </tr>
+            <?php foreach($message_array as $value): ?>              
             <tr>
-                <?php // foreach($data_array as $value) : ?>  
-                <td class="delete__main-id">1 <?php // echo $value['id'] ?></td>
-                <td class="delete__main-fullname">yamada</td>
-                <td class="delete__main-gender">male</td>
-                <td class="delete__main-email">test@gmail.com</td>
-                <td class="delete__main-opinion">test</td>
+                <td class="delete__main-id"> <?php echo $value['id']; ?> </td>
+                <td class="delete__main-fullname"> <?php echo $value['fullname']; ?> </td>
+                <td class="delete__main-gender"> <?php if($value['gender'] == "1"){ echo "男性";}else{echo "女性"; } ?> </td>
+                <td class="delete__main-email"> <?php echo $value['email']; ?> </td>
+                <td class="delete__main-opinion"> <?php echo $value['opinion']; ?> </td>               
                 <td class="delete__main-delete">
                     <form method="post">
                         <input type="submit" name="btn_delete" value="削除" class="btn_delete">
-                        <input type="hidden" name="opinion_id" value="<?php //echo $value['id']; ?>">
+                        <input type="hidden" name="opinion_id" value="<?php echo $value['id']; ?>">
                     </form>
                 </td>
             </tr>
+            <?php endforeach; ?> 
         </table>
     </div>
-
 </div>
-
-
-
-
-
-
-
 </body>
+</html>

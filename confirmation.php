@@ -68,6 +68,16 @@ if( $res ) {
      $pdo -> commit();
 }
 
+// 自動メール送信
+//件名を設定
+$auto_reply_subject = 'お問い合わせありがとうございます。';
+
+//本文を設定
+$auto_reply_text="お問い合わせを受け付けいたしました。確認後、返答いたします。";
+
+// メール送信
+mb_send_mail( $data_array['email'], $auto_reply_subject, $auto_reply_text);
+
 } catch ( Exception $e) {
     $pdo -> rollback();
 }
